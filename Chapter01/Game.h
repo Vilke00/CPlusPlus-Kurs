@@ -1,6 +1,12 @@
 #pragma once
 #include "SDL/SDL.h"
 
+struct Vector2
+{
+	float x;
+	float y;
+};
+
 class Game
 {
 public:
@@ -20,4 +26,15 @@ private:
 	SDL_Window* mWindow;
 	//Da li igra treba da se nastavi
 	bool mIsRunning;
+	//Sistem za crtanje grafike
+	SDL_Renderer* mRenderer;
+
+	Vector2 mPaddlePos;
+	Vector2 mBallPos;
+	//Brzina i pravac lopte
+	Vector2 mBallVel;
+	//Za delta time
+	Uint32 mTicksCount;
+	//Pomeranje igraca. 0 ne pomera se, -1 ide gore, 1 ide dole
+	int mPaddleDir;
 };
