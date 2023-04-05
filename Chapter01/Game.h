@@ -1,10 +1,18 @@
 #pragma once
+#include <vector>
+
 #include "SDL/SDL.h"
 
 struct Vector2
 {
 	float x;
 	float y;
+};
+
+struct Ball
+{
+	Vector2 position;
+	Vector2 velocity;
 };
 
 class Game
@@ -32,12 +40,14 @@ private:
 	Vector2 mPaddleOnePos;
 	//Pomeranje igraca. 0 ne pomera se, -1 ide gore, 1 ide dole
 	int mPaddleOneDir;
-
 	Vector2 mPaddleTwoPos;
 	int mPaddleTwoDir;
-	Vector2 mBallPos;
+
+	//Vector2 mBallPos;
 	//Brzina i pravac lopte
-	Vector2 mBallVel;
+	//Vector2 mBallVel;
+	std::vector<Ball> mBallList;
+
 	//Za delta time
 	Uint32 mTicksCount;
 };

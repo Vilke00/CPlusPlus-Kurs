@@ -62,10 +62,13 @@ bool Game::Initialize()
 	mPaddleOnePos.y = 768.0f/2.0f;
 	mPaddleTwoPos.x = 1004.0f - thickness;
 	mPaddleTwoPos.y = 768.0f/2.0f;
-	mBallPos.x = 1024.0f/2.0f;
+
+	mBallList.push_back({{1024.0f/2.0f, 768.0f/2.0f}, {-100.0f, 125.0f}});
+	mBallList.push_back({{1024.0f/2.0f, 768.0f/2.0f}, {100.0f, -125.0f}});
+	/*mBallPos.x = 1024.0f/2.0f;
 	mBallPos.y = 768.0f/2.0f;
 	mBallVel.x = -100.0f;
-	mBallVel.y = 125.0f;
+	mBallVel.y = 125.0f;*/
 	return true;
 }
 
@@ -185,59 +188,61 @@ void Game::UpdateGame()
 		}
 	}
 
-	mBallPos.x += mBallVel.x * deltaTime;
-	mBallPos.y += mBallVel.y * deltaTime;
+	for(Ball& b : mBallList)
+	{
+		b.position.x += b.velocity.x * deltaTime;
+		b.position.y += b.velocity.y * deltaTime;
 
-	float diff_one = mPaddleOnePos.y - mBallPos.y;
-	// Take absolute value of difference
-	diff_one = (diff_one > 0.0f) ? diff_one : -diff_one;
-	
-	float diff_two = mPaddleTwoPos.y - mBallPos.y;
-	// Take absolute value of difference
-	diff_two = (diff_two > 0.0f) ? diff_two : -diff_two;
+		
+		float diff_one = mPaddleOnePos.y - b.position.y;
+		// Take absolute value of difference
+		diff_one = (diff_one > 0.0f) ? diff_one : -diff_one;
+		
+		float diff_two = mPaddleTwoPos.y - b.position.y;
+		// Take absolute value of difference
+		diff_two = (diff_two > 0.0f) ? diff_two : -diff_two;
 
-	float diff = (diff_one < diff_two) ? diff_one : diff_two;
+		float diff = (diff_one < diff_two) ? diff_one : diff_two;
 
-	if(
-		//Da li je razlika dovoljno mala izmedju lopte i igraca
-		diff <= paddleH / 2.0f &&
-		//Lopta je na tacnoj x poziciji
-		(mBallPos.x <= 25.0f && mBallPos.x >= 20.0f) &&
-		//Lopta se pomera levo
-		mBallVel.x < 0.0f)
-	{
-		mBallVel.x *= -1.0f;
-	}
-	else if(
-		diff <= paddleH / 2.0f &&
-		mBallPos.x <= 994.0f && mBallPos.x >= 989.0f &&
-		mBallVel.x > 0.0f
-		)
-	{
-		mBallVel.x *= -1.0f;
-	}
-	
-	// Did the ball go off the screen? (if so, end game)
-	else if (mBallPos.x <= 0.0f || mBallPos.x >= 1024.0f)
-	{
-		mIsRunning = false;
-	}
-	//Desni zid
-	/*else if(mBallPos.x >= (1024.0f - thickness) && mBallVel.x > 0.0f)
-	{
-		mBallVel.x *= -1.0f;
-	}*/
+		
+		if(
+			//Da li je razlika dovoljno mala izmedju lopte i igraca
+			diff <= paddleH / 2.0f &&
+			//Lopta je na tacnoj x poziciji
+			(b.position.x <= 25.0f && b.position.x >= 20.0f) &&
+			//Lopta se pomera levo
+			b.velocity.x < 0.0f)
+		{
+			b.velocity.x *= -1.0f;
+		}
+		else if(
+			diff <= paddleH / 2.0f &&
+			b.position.x <= 994.0f && b.position.x >= 989.0f &&
+			b.velocity.x > 0.0f
+			)
+		{
+			b.velocity.x *= -1.0f;
+		}
+		
+		// Did the ball go off the screen? (if so, end game)
+		else if (b.position.x <= 0.0f || b.position.x >= 1024.0f)
+		{
+			mIsRunning = false;
+		}
 
-	//Da li je udarilo gornji u zid i da li se pomera prema zidu
-	if(mBallPos.y <= thickness && mBallVel.y < 0.0f)
-	{
-		mBallVel.y *= -1;
+		//Da li je udarilo gornji u zid i da li se pomera prema zidu
+		if(b.position.y <= thickness && b.velocity.y < 0.0f)
+		{
+			b.velocity.y *= -1;
+		}
+		//Donji zid
+		else if(b.position.y >= (768 - thickness) && b.velocity.y > 0.0f)
+		{
+			b.velocity.y *= -1;
+		}
 	}
-	//Donji zid
-	else if(mBallPos.y >= (768 - thickness) && mBallVel.y > 0.0f)
-	{
-		mBallVel.y *= -1;
-	}
+
+
 	
 }
 
@@ -304,13 +309,17 @@ void Game::GenerateOutput()
 	};
 	SDL_RenderFillRect(mRenderer, &paddleTwo);
 
-	SDL_Rect ball{
-		static_cast<int>(mBallPos.x - thickness/2),//Delim sa 2 da bih konvertovao x i y sa center pointa u top left
-		static_cast<int>(mBallPos.y - thickness/2),
-		thickness,
-		thickness
-	};
-	SDL_RenderFillRect(mRenderer, &ball);
+	for(Ball &b : mBallList)
+	{
+		
+		SDL_Rect ball{
+			static_cast<int>(b.position.x - thickness/2),//Delim sa 2 da bih konvertovao x i y sa center pointa u top left
+			static_cast<int>(b.position.y - thickness/2),
+			thickness,
+			thickness
+		};
+		SDL_RenderFillRect(mRenderer, &ball);
+	}
 
 	//Zameni buffere
 	SDL_RenderPresent(mRenderer);
