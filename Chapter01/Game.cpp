@@ -7,8 +7,9 @@ Game::Game()
 :mWindow(nullptr)
 ,mIsRunning(true)
 ,mRenderer(nullptr)
+,mPaddleOneDir(0)
+,mPaddleTwoDir(0)
 ,mTicksCount(0)
-,mPaddleDir(0)
 {
 	
 }
@@ -57,12 +58,14 @@ bool Game::Initialize()
 		return false;
 	}
 	
-	mPaddlePos.x = 10.0f;
-	mPaddlePos.y = 768.0f/2.0f;
+	mPaddleOnePos.x = 10.0f;
+	mPaddleOnePos.y = 768.0f/2.0f;
+	mPaddleTwoPos.x = 1004.0f - thickness;
+	mPaddleTwoPos.y = 768.0f/2.0f;
 	mBallPos.x = 1024.0f/2.0f;
 	mBallPos.y = 768.0f/2.0f;
-	mBallVel.x = -200.0f;
-	mBallVel.y = 235.0f;
+	mBallVel.x = -100.0f;
+	mBallVel.y = 125.0f;
 	return true;
 }
 
@@ -110,14 +113,26 @@ void Game::ProcessInput()
 
 	
 	//Ako su pritisnuti u isto vreme, zaustavlja ga jer samo dodaje vrednosti
-	mPaddleDir = 0;
+	mPaddleOneDir = 0;
 	if(state[SDL_SCANCODE_W])
 	{
-		mPaddleDir -= 1;
+		mPaddleOneDir -= 1;
 	}
 	if(state[SDL_SCANCODE_S])
 	{
-		mPaddleDir += 1;
+		mPaddleOneDir += 1;
+	}
+
+	
+	//Ako su pritisnuti u isto vreme, zaustavlja ga jer samo dodaje vrednosti
+	mPaddleTwoDir = 0;
+	if(state[SDL_SCANCODE_I])
+	{
+		mPaddleTwoDir -= 1;
+	}
+	if(state[SDL_SCANCODE_K])
+	{
+		mPaddleTwoDir += 1;
 	}
 }
 
@@ -138,48 +153,80 @@ void Game::UpdateGame()
 	}
 
 	//Updateuje sa paddle brzine 300px po sekundi
-	if(mPaddleDir != 0)
+	if(mPaddleOneDir != 0)
 	{
-		mPaddlePos.y += mPaddleDir * 300.0f * deltaTime;
+		mPaddleOnePos.y += mPaddleOneDir * 300.0f * deltaTime;
 
 		//Granice ekrana
-		if(mPaddlePos.y < (paddleH/2.0f + thickness))
+		if(mPaddleOnePos.y < (paddleH/2.0f + thickness))
 		{
-			mPaddlePos.y = paddleH/2.0f + thickness;
+			mPaddleOnePos.y = paddleH/2.0f + thickness;
 		}
-		else if(mPaddlePos.y > (768.0f - paddleH/2.0f - thickness))
+		else if(mPaddleOnePos.y > (768.0f - paddleH/2.0f - thickness))
 		{
-			mPaddlePos.y = 768.0f - paddleH/2.0f - thickness;
+			mPaddleOnePos.y = 768.0f - paddleH/2.0f - thickness;
+		}
+	}
+
+	
+	//Updateuje sa paddle brzine 300px po sekundi
+	if(mPaddleTwoDir != 0)
+	{
+		mPaddleTwoPos.y += mPaddleTwoDir * 300.0f * deltaTime;
+
+		//Granice ekrana
+		if(mPaddleTwoPos.y < (paddleH/2.0f + thickness))
+		{
+			mPaddleTwoPos.y = paddleH/2.0f + thickness;
+		}
+		else if(mPaddleTwoPos.y > (768.0f - paddleH/2.0f - thickness))
+		{
+			mPaddleTwoPos.y = 768.0f - paddleH/2.0f - thickness;
 		}
 	}
 
 	mBallPos.x += mBallVel.x * deltaTime;
 	mBallPos.y += mBallVel.y * deltaTime;
 
-	float diff = mPaddlePos.y - mBallPos.y;
+	float diff_one = mPaddleOnePos.y - mBallPos.y;
 	// Take absolute value of difference
-	diff = (diff > 0.0f) ? diff : -diff;
+	diff_one = (diff_one > 0.0f) ? diff_one : -diff_one;
+	
+	float diff_two = mPaddleTwoPos.y - mBallPos.y;
+	// Take absolute value of difference
+	diff_two = (diff_two > 0.0f) ? diff_two : -diff_two;
+
+	float diff = (diff_one < diff_two) ? diff_one : diff_two;
+
 	if(
 		//Da li je razlika dovoljno mala izmedju lopte i igraca
 		diff <= paddleH / 2.0f &&
 		//Lopta je na tacnoj x poziciji
-		mBallPos.x <= 25.0f && mBallPos.x >= 20.0f &&
+		(mBallPos.x <= 25.0f && mBallPos.x >= 20.0f) &&
 		//Lopta se pomera levo
 		mBallVel.x < 0.0f)
 	{
 		mBallVel.x *= -1.0f;
 	}
+	else if(
+		diff <= paddleH / 2.0f &&
+		mBallPos.x <= 994.0f && mBallPos.x >= 989.0f &&
+		mBallVel.x > 0.0f
+		)
+	{
+		mBallVel.x *= -1.0f;
+	}
 	
 	// Did the ball go off the screen? (if so, end game)
-	else if (mBallPos.x <= 0.0f)
+	else if (mBallPos.x <= 0.0f || mBallPos.x >= 1024.0f)
 	{
 		mIsRunning = false;
 	}
 	//Desni zid
-	else if(mBallPos.x >= (1024.0f - thickness) && mBallVel.x > 0.0f)
+	/*else if(mBallPos.x >= (1024.0f - thickness) && mBallVel.x > 0.0f)
 	{
 		mBallVel.x *= -1.0f;
-	}
+	}*/
 
 	//Da li je udarilo gornji u zid i da li se pomera prema zidu
 	if(mBallPos.y <= thickness && mBallVel.y < 0.0f)
@@ -239,13 +286,23 @@ void Game::GenerateOutput()
 	SDL_RenderFillRect(mRenderer, &wall);
 	
 	// Draw paddle
-	SDL_Rect paddle{
-		static_cast<int>(mPaddlePos.x),
-		static_cast<int>(mPaddlePos.y - paddleH/2),
+	SDL_Rect paddleOne{
+		static_cast<int>(mPaddleOnePos.x),
+		static_cast<int>(mPaddleOnePos.y - paddleH/2),
 		thickness,
 		static_cast<int>(paddleH)
 	};
-	SDL_RenderFillRect(mRenderer, &paddle);
+	SDL_RenderFillRect(mRenderer, &paddleOne);
+
+	
+	// Draw paddle
+	SDL_Rect paddleTwo{
+		static_cast<int>(mPaddleTwoPos.x),
+		static_cast<int>(mPaddleTwoPos.y - paddleH/2),
+		thickness,
+		static_cast<int>(paddleH)
+	};
+	SDL_RenderFillRect(mRenderer, &paddleTwo);
 
 	SDL_Rect ball{
 		static_cast<int>(mBallPos.x - thickness/2),//Delim sa 2 da bih konvertovao x i y sa center pointa u top left

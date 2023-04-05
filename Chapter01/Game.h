@@ -29,12 +29,15 @@ private:
 	//Sistem za crtanje grafike
 	SDL_Renderer* mRenderer;
 
-	Vector2 mPaddlePos;
+	Vector2 mPaddleOnePos;
+	//Pomeranje igraca. 0 ne pomera se, -1 ide gore, 1 ide dole
+	int mPaddleOneDir;
+
+	Vector2 mPaddleTwoPos;
+	int mPaddleTwoDir;
 	Vector2 mBallPos;
 	//Brzina i pravac lopte
 	Vector2 mBallVel;
 	//Za delta time
 	Uint32 mTicksCount;
-	//Pomeranje igraca. 0 ne pomera se, -1 ide gore, 1 ide dole
-	int mPaddleDir;
 };
